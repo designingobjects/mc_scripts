@@ -1,0 +1,60 @@
+<script runat="server">
+  
+    Platform.Load("core","1");
+    
+    /*************************************************************************
+     * GLOBAL VARIABLES
+     *************************************************************************/
+    
+    var dataExtensionId = "9CD7159B-4046-4F8E-83F7-3C779338B331";
+    var subscriberDuplicateListExtId = "dups - 3075"; 
+
+ 
+    /*************************************************************************
+     * MAIN FUNCTION
+     *************************************************************************/
+
+    var dataRows = getDataRows(dataExtensionId);
+    addEmailsToList(dataRows, subscriberDuplicateListExtId);
+
+    /*************************************************************************
+     * METHODS
+     *************************************************************************/
+ 
+    function getDataRows(deId) {
+        var de = DataExtension.Init(deId);
+        return de.Rows.Retrieve();
+    }
+    
+    function isSubscriberExists(subscriberKey) {
+        var results = Subscriber.Retrieve();
+        return results.length > 0;
+    }
+ 
+    function addEmailsToList(dataRows, subscriberDuplicateListExtId) {
+        if (dataRows && dataRows.length > 0) {
+            for(var i=0; i<dataRows.length; i++) {
+                    
+                var subscribers = Subscriber.Retrieve({Property:"EmailAddress",SimpleOperator:"equals",Value:dataRows[i]["Email"]});
+                
+                var duplicateSubscriberList = List.Init(subscriberDuplicateListExtId);
+     
+                for(var j=0; j<subscribers.length; j++){
+                    Write("<br/> subscribers[j]['SubscriberKey'] : " + subscribers[j]["SubscriberKey"]);
+                    if(subscribers[j]["SubscriberKey"] && subscribers[j]["SubscriberKey"].indexOf("@") > 0) {
+                        continue;
+                    }
+                    
+                    var subscriberOnList = duplicateSubscriberList.Subscribers.Retrieve({Property:"SubscriberKey",SimpleOperator:"equals",Value:subscribers[j]["SubscriberKey"]});
+                    if(subscriberOnList.length > 0) {
+                        continue;
+                    }
+
+                    var status = duplicateSubscriberList.Subscribers.Add(subscribers[j]);
+                    Write("<br/> status : " + status);
+                }              
+            } // end for
+        } //end if
+    } // end addEmailsToList()
+    
+</script>
