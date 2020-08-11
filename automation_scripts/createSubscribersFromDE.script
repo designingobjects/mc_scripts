@@ -1,0 +1,72 @@
+<script runat="server">
+    
+    Platform.Load("core","1.1.1");
+    
+    /*************************************************************************
+     * GLOBAL VARIABLES
+     *************************************************************************/
+  
+    var dataExtensionId = "D8358CB2-B8A5-41F6-9FE1-FBB702A26059";
+    var emailPreference = "HTML";
+ 
+
+ 
+    /*************************************************************************
+     * MAIN FUNCTION
+     *************************************************************************/
+
+    var dataRows = getDataRows(dataExtensionId);
+    createSubscribers(dataRows);
+ 
+
+ 
+    /*************************************************************************
+     * METHODS
+     *************************************************************************/
+ 
+    function getDataRows(deId) {
+        var de = DataExtension.Init(deId);
+        return de.Rows.Retrieve();
+    }
+    
+    function isSubscriberExists(subscriberKey) {
+        var results = Subscriber.Retrieve({Property:"SubscriberKey",SimpleOperator:"equals",Value:subscriberKey});
+        return results.length > 0;
+    }
+ 
+    function createSubscribers(dataRows) {
+        if (dataRows && dataRows.length > 0) {
+            for(var i=0; i<dataRows.length; i++) {
+      
+                if (isSubscriberExists(dataRows[i]["Email"])) {
+                    // do nothing
+                    continue;
+                } else {
+     
+                    createSubscriber(
+                        dataRows[i]["Email"],
+                        dataRows[i]["Email"],
+                        emailPreference,
+                        dataRows[i]["FirstName"],
+                        dataRows[i]["LastName"],
+                        146);
+                }
+            } // end for
+        } //end if
+    } // end createSubscribers()
+  
+    function createSubscriber(key, email, emailPreference, firstName, lastName, listActiveId ) {
+        var newSubscriber = {
+            "SubscriberKey": key,
+            "EmailAddress": email,
+            "EmailTypePreference": emailPreference,
+            "Attributes":{
+                "First Name": firstName, 
+                "Last Name": lastName
+            },
+            "Lists": {"Status": "Active", "ID": listActiveId, "Action": "Create"}
+        };
+        return Subscriber.Add(newSubscriber);
+    } // end createSubscriber()
+
+</script>
